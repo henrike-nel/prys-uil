@@ -1,0 +1,19 @@
+{
+  "name": "@prysuil/scraper",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "tsx src/index.ts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@octokit/rest": "^22.0.1",
+    "@prysuil/shared": "workspace:*",
+    "playwright": "^1.64.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "tsx": "^4.23.15",
+    "vitest": "^5.0.5"
+  }
+}

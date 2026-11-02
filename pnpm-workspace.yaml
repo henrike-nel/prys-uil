@@ -1,0 +1,7 @@
+packages:
+  - apps/*
+  - packages/*
+
+# tsx needs esbuild's install script; pnpm 12 blocks it unless approved
+allowBuilds:
+  esbuild: true

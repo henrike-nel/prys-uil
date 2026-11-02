@@ -1,0 +1,18 @@
+import type { PriceFile } from './schemas';
+
+export function currentPrice(priceFile: PriceFile): number | undefined {
+  return priceFile.history.at(-1)?.price;
+}
+
+export function lowestPrice(priceFile: PriceFile): number | undefined {
+  if (priceFile.history.length === 0) return undefined;
+  return Math.min(...priceFile.history.map((point) => point.price));
+}
+
+// Percentage change from the first recorded price, e.g. 1000 -> 800 is -20.
+export function changeSinceAdded(priceFile: PriceFile): number | undefined {
+  const first = priceFile.history[0];
+  const latest = priceFile.history.at(-1);
+  if (!first || !latest) return undefined;
+  return ((latest.price - first.price) / first.price) * 100;
+}

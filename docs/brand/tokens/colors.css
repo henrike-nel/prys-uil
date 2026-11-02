@@ -1,0 +1,12 @@
+/* PrysUil brand colours */
+:root {
+  --color-cream: #FBFAEE;   /* page background, text on brown */
+  --color-brown: #473C33;   /* all text, icons, owl */
+  --color-green: #ABC270;   /* headers, app icon, success / "below target" */
+  --color-yellow: #FEC868;  /* primary actions (add, save) */
+  --color-orange: #FDA769;  /* price-drop highlights, badges, owl beak */
+
+  --color-surface: #FFFFFF;                        /* cards on cream */
+  --color-border: color-mix(in srgb, var(--color-brown) 15%, transparent);
+  --color-text-muted: color-mix(in srgb, var(--color-brown) 70%, var(--color-cream));
+}
