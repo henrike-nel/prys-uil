@@ -1,0 +1,102 @@
+body {
+  margin: 0;
+  background: var(--color-cream);
+  color: var(--color-brown);
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-weight: 400;
+}
+
+h1,
+h2,
+h3 {
+  font-weight: 600;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  padding: 0.4rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  cursor: pointer;
+}
+
+button.primary {
+  border-color: var(--color-yellow);
+  background: var(--color-yellow);
+  font-weight: 600;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+input:not([type='checkbox']),
+select {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background: var(--color-surface);
+}
+
+dialog {
+  width: min(28rem, calc(100% - 2rem));
+  padding: 1.25rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: var(--color-surface);
+  color: var(--color-brown);
+}
+
+dialog::backdrop {
+  background: color-mix(in srgb, var(--color-brown) 40%, transparent);
+}
+
+dialog h2 {
+  margin-top: 0;
+}
+
+dialog form {
+  display: grid;
+  gap: 0.75rem;
+}
+
+dialog label {
+  display: grid;
+  gap: 0.25rem;
+}
+
+dialog label.check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+dialog p {
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.hint {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.error {
+  padding: 0.5rem 0.75rem;
+  border-left: 4px solid var(--color-orange);
+  background: var(--color-cream);
+}

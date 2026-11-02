@@ -1,0 +1,30 @@
+name: deploy-web
+
+on:
+  push: { branches: [main], paths: ['apps/web/**', 'packages/shared/**'] }
+  workflow_dispatch:
+
+concurrency: { group: pages, cancel-in-progress: false }
+
+permissions: { contents: read, pages: write, id-token: write }
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: { name: github-pages, url: '${{ steps.deployment.outputs.page_url }}' }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @prysuil/web build
+        env:
+          VITE_REPO_OWNER: ${{ github.repository_owner }}
+          VITE_REPO_NAME: ${{ github.event.repository.name }}
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: apps/web/dist }
+      - id: deployment
+        uses: actions/deploy-pages@v4
