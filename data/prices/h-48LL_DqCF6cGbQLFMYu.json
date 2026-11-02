@@ -9,6 +9,7 @@
       "inStock": true
     }
   ],
-  "lastCheckedAt": "2026-11-02T14:13:10.907Z",
-  "consecutiveFailures": 0
+  "lastCheckedAt": "2026-11-02T14:16:53.387Z",
+  "lastError": "timeout",
+  "consecutiveFailures": 1
 }
