@@ -11,10 +11,10 @@ beforeEach(() => {
 });
 
 describe('renderHtml', () => {
-  it('returns the rendered page after network idle and closes the browser', async () => {
+  it('returns the rendered page once the DOM is loaded and closes the browser', async () => {
     await expect(renderHtml('https://shop.example/item')).resolves.toBe('<html>rendered</html>');
     expect(page.goto).toHaveBeenCalledWith('https://shop.example/item', {
-      waitUntil: 'networkidle',
+      waitUntil: 'domcontentloaded',
       timeout: 20_000,
     });
     expect(browser.close).toHaveBeenCalled();

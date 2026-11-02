@@ -6,7 +6,9 @@ export async function renderHtml(url: string): Promise<string> {
   const browser = await chromium.launch();
   try {
     const page = await browser.newPage();
-    await page.goto(url, { waitUntil: 'networkidle', timeout: TIMEOUT_MS });
+    // 'networkidle' never fires on sites with persistent background requests
+    // (analytics, chat widgets), even once the content we need has rendered.
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: TIMEOUT_MS });
     return await page.content();
   } finally {
     await browser.close();
