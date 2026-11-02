@@ -5,7 +5,6 @@ export const Product = z.object({
   url: z.string().url(),
   name: z.string().min(1).optional(), // user override; else scraped title
   shop: z.string(), // hostname, e.g. takealot.com
-  forWhom: z.string().optional(),
   targetPrice: z.number().positive().optional(), // alert when price <= this
   minDropPercent: z.number().min(0).max(100).default(5),
   selector: z.string().optional(), // CSS selector override for stubborn sites

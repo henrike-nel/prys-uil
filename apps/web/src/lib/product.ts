@@ -3,7 +3,6 @@ import { normalizeUrl, Product } from '@prysuil/shared';
 // What the add and edit dialogs bind to. Empty strings mean "not set".
 export type ProductForm = {
   url: string;
-  forWhom: string;
   targetPrice: number | undefined;
   minDropPercent: number | undefined;
   name: string;
@@ -15,7 +14,6 @@ export type ProductForm = {
 export function emptyForm(): ProductForm {
   return {
     url: '',
-    forWhom: '',
     targetPrice: undefined,
     minDropPercent: 5,
     name: '',
@@ -28,7 +26,6 @@ export function emptyForm(): ProductForm {
 export function formFrom(product: Product): ProductForm {
   return {
     url: product.url,
-    forWhom: product.forWhom ?? '',
     targetPrice: product.targetPrice,
     minDropPercent: product.minDropPercent,
     name: product.name ?? '',
@@ -63,7 +60,6 @@ export function toProduct(form: ProductForm, base: Pick<Product, 'id' | 'addedAt
     url,
     shop: new URL(url).hostname.replace(/^www\./, ''),
     name: form.name.trim() || undefined,
-    forWhom: form.forWhom.trim() || undefined,
     targetPrice: form.targetPrice || undefined,
     minDropPercent: form.minDropPercent,
     selector: form.selector.trim() || undefined,

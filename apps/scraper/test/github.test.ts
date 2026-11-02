@@ -29,7 +29,6 @@ function drop(extra: Partial<PriceFile> = {}): Alert {
     url: 'https://shop.example/item',
     name: 'Headphones',
     shop: 'shop.example',
-    forWhom: 'Dad',
     targetPrice: 950,
     addedAt: '2026-10-01T00:00:00Z',
   });
@@ -102,19 +101,6 @@ describe('GitHubIssuesNotifier', () => {
     expect(bodyOf(issues.createComment.mock.calls[0])).toContain('@owner');
     expect(bodyOf(issues.create.mock.calls[1])).not.toContain('@owner');
     expect(bodyOf(issues.createComment.mock.calls[1])).not.toContain('@owner');
-  });
-
-  it('never puts forWhom in issues, comments or labels', async () => {
-    const { issues, notifier } = setup();
-
-    await notifier.send([
-      drop(),
-      drop({ issueNumber: 7 }),
-      cantRead(),
-      cantRead({ issueNumber: 7 }),
-    ]);
-
-    expect(JSON.stringify(Object.values(issues).map((fn) => fn.mock.calls))).not.toContain('Dad');
   });
 
   it('opens a scrape-error issue when the price cannot be read', async () => {

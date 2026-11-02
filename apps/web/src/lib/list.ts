@@ -27,11 +27,7 @@ export function badge(product: Product, priceFile?: PriceFile): Badge | undefine
   return undefined;
 }
 
-export type Filters = { forWhom: string; hideBought: boolean }; // forWhom '' means everyone
-
-export function forWhomNames(products: Product[]): string[] {
-  return [...new Set(products.flatMap((p) => (p.forWhom ? [p.forWhom] : [])))].sort();
-}
+export type Filters = { hideBought: boolean };
 
 // Biggest drop first, products without a price last, then by name.
 export function visibleProducts(
@@ -46,7 +42,6 @@ export function visibleProducts(
   const name = (p: Product) => displayName(p, priceFiles[p.id]);
   return products
     .filter((p) => !(filters.hideBought && p.bought))
-    .filter((p) => !filters.forWhom || p.forWhom === filters.forWhom)
     .sort((a, b) => {
       const byChange = change(a) - change(b);
       // Infinity - Infinity is NaN, so two unpriced products fall through to the name

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PriceFile, Product } from '@prysuil/shared';
-import { badge, forWhomNames, visibleProducts } from '../src/lib/list';
+import { badge, visibleProducts } from '../src/lib/list';
 
 function product(extra: Partial<Product> = {}): Product {
   return Product.parse({
@@ -60,24 +60,12 @@ describe('badge', () => {
   });
 });
 
-describe('forWhomNames', () => {
-  it('lists each name once, sorted', () => {
-    const products = [
-      product({ forWhom: 'Mom' }),
-      product({ forWhom: 'Dad' }),
-      product(),
-      product({ forWhom: 'Mom' }),
-    ];
-    expect(forWhomNames(products)).toEqual(['Dad', 'Mom']);
-  });
-});
-
 describe('visibleProducts', () => {
   const products = [
-    product({ id: 'a', name: 'Alpha', forWhom: 'Dad' }),
+    product({ id: 'a', name: 'Alpha' }),
     product({ id: 'b', name: 'Bravo', bought: true }),
-    product({ id: 'c', name: 'Charlie', forWhom: 'Mom' }),
-    product({ id: 'd', name: 'Delta', forWhom: 'Dad' }),
+    product({ id: 'c', name: 'Charlie' }),
+    product({ id: 'd', name: 'Delta' }),
     product({ id: 'e', name: 'Echo' }),
   ];
   const priceFiles = {
@@ -89,7 +77,7 @@ describe('visibleProducts', () => {
   const ids = (list: Product[]) => list.map((p) => p.id);
 
   it('sorts by biggest drop, unpriced last, and hides bought', () => {
-    expect(ids(visibleProducts(products, priceFiles, { forWhom: '', hideBought: true }))).toEqual([
+    expect(ids(visibleProducts(products, priceFiles, { hideBought: true }))).toEqual([
       'c',
       'a',
       'd',
@@ -98,19 +86,13 @@ describe('visibleProducts', () => {
   });
 
   it('shows bought products when asked', () => {
-    expect(ids(visibleProducts(products, priceFiles, { forWhom: '', hideBought: false }))).toEqual([
+    expect(ids(visibleProducts(products, priceFiles, { hideBought: false }))).toEqual([
       'b',
       'c',
       'a',
       'd',
       'e',
     ]);
-  });
-
-  it('filters by who it is for', () => {
-    expect(
-      ids(visibleProducts(products, priceFiles, { forWhom: 'Dad', hideBought: true })),
-    ).toEqual(['a', 'd']);
   });
 
   it('sorts equal changes and unpriced products by display name', () => {
@@ -121,17 +103,12 @@ describe('visibleProducts', () => {
       product({ id: 'w', name: 'Whiskey' }),
     ];
     const files = { y: priceFile([100, 90]), w: priceFile([100, 90]) };
-    expect(ids(visibleProducts(list, files, { forWhom: '', hideBought: true }))).toEqual([
-      'w',
-      'y',
-      'x',
-      'z',
-    ]);
+    expect(ids(visibleProducts(list, files, { hideBought: true }))).toEqual(['w', 'y', 'x', 'z']);
   });
 
   it('does not reorder the original list', () => {
     const before = ids(products);
-    visibleProducts(products, priceFiles, { forWhom: '', hideBought: false });
+    visibleProducts(products, priceFiles, { hideBought: false });
     expect(ids(products)).toEqual(before);
   });
 });

@@ -72,7 +72,6 @@ const Product = z.object({
   url: z.string().url(),
   name: z.string().min(1).optional(), // user override; else scraped title
   shop: z.string(),               // hostname, e.g. takealot.com
-  forWhom: z.string().optional(), // e.g. "Dad"
   targetPrice: z.number().positive().optional(), // alert when price <= this
   minDropPercent: z.number().min(0).max(100).default(5),
   selector: z.string().optional(),   // CSS selector override for stubborn sites
@@ -120,8 +119,8 @@ A single-page Svelte 5 app with one main screen, a few dialogs, and no router. I
 
 **Screens**
 
-1. **List** (home). One card per product: image, display name, shop, current price, target price, lowest seen, change since added, and a price-history sparkline. Each card shows a status badge: *Checking…* (no price yet), *Below target*, *Price dropped*, *Can't read price* (`lastError` set) or *Bought*. Filters: for whom (all / each name), and hide bought (on by default). Sort: biggest drop first, then name.
-2. **Add product dialog.** Fields: URL (required), for whom, target price (R), minimum drop % (default 5). On save the product is committed with no name; the card shows *Checking…* until the scraper fills in the title, image and first price.
+1. **List** (home). One card per product: image, display name, shop, current price, target price, lowest seen, change since added, and a price-history sparkline. Each card shows a status badge: *Checking…* (no price yet), *Below target*, *Price dropped*, *Can't read price* (`lastError` set) or *Bought*. Filters: hide bought (on by default). Sort: biggest drop first, then name.
+2. **Add product dialog.** Fields: URL (required), target price (R), minimum drop % (default 5). On save the product is committed with no name; the card shows *Checking…* until the scraper fills in the title, image and first price.
 3. **Edit product dialog.** All fields from Add, plus name override, CSS selector, "use browser" toggle, mark as bought, and delete (with confirm).
 4. **Settings dialog.** Paste a GitHub fine-grained token, test it, clear it. Shows the repo the app is bound to.
 
@@ -242,7 +241,6 @@ https://www.takealot.com/...
 - Every later alert adds a comment to that issue.
 - The comment or issue body @mentions the repo owner **only when the WhatsApp send failed or WhatsApp is not configured**, so you aren't notified twice. The record is written either way.
 - When a product is marked bought or deleted, the scraper closes its issue with a final comment.
-- The *for whom* value is never put in issues or labels.
 
 **Can't read price**
 
@@ -330,5 +328,4 @@ The web app's GitHub token is not a repo secret; it lives only in the owner's br
 
 **Open questions**
 
-- *For whom* names are stored in `data/products.json`, which is public. Use nicknames, or drop the field?
 - Which shops will you track first? Each needs a saved HTML fixture to confirm extraction works.

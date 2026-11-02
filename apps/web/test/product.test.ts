@@ -53,7 +53,6 @@ describe('toProduct', () => {
   it('keeps every edited field', () => {
     const form = {
       url: 'https://shop.example/a',
-      forWhom: 'Dad',
       targetPrice: 900,
       minDropPercent: 10,
       name: 'Headphones',
