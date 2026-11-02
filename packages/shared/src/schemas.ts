@@ -5,7 +5,7 @@ export const Product = z.object({
   url: z.string().url(),
   name: z.string().min(1).optional(), // user override; else scraped title
   shop: z.string(), // hostname, e.g. takealot.com
-  forWhom: z.string().optional(), // e.g. "Dad"
+  forWhom: z.string().optional(),
   targetPrice: z.number().positive().optional(), // alert when price <= this
   minDropPercent: z.number().min(0).max(100).default(5),
   selector: z.string().optional(), // CSS selector override for stubborn sites
@@ -32,12 +32,13 @@ export type PricePoint = z.infer<typeof PricePoint>;
 export const PriceFile = z.object({
   productId: z.string(),
   title: z.string().optional(), // scraped product title
-  imageUrl: z.string().url().optional(), // scraped product image
+  imageUrl: z.string().url().optional(),
   history: z.array(PricePoint), // appended only when the price changes
   lastCheckedAt: z.string().datetime(),
   lastError: z.string().optional(), // set when extraction fails, cleared on success
   consecutiveFailures: z.number().int().default(0),
   lastAlertedPrice: z.number().optional(),
-  issueNumber: z.number().int().optional(), // GitHub Issue for this product
+  cantReadAlerted: z.boolean().optional(),
+  issueNumber: z.number().int().optional(),
 });
 export type PriceFile = z.infer<typeof PriceFile>;

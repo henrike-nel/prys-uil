@@ -24,8 +24,7 @@ function message(alert: Alert): string {
   if (alert.kind === 'cant-read-price') {
     return `PrysUil: can't read the price for ${name} (${priceFile.lastError}). Set a CSS selector or enable "use browser".\n${product.url}`;
   }
-  const oldPrice = alert.oldPrice!;
-  const newPrice = alert.newPrice!;
+  const { oldPrice, newPrice } = alert;
   const target = product.targetPrice ? ` Target ${formatPrice(product.targetPrice)}.` : '';
   return `PrysUil: ${name} dropped to ${formatPrice(newPrice)} (was ${formatPrice(oldPrice)}, ${formatChange(oldPrice, newPrice)}).${target}\n${product.url}`;
 }
@@ -35,7 +34,7 @@ function summary(alerts: Alert[]): string {
     const name = displayName(alert.product, alert.priceFile);
     return alert.kind === 'cant-read-price'
       ? `${name}: can't read price (${alert.priceFile.lastError})`
-      : `${name}: ${formatPrice(alert.newPrice!)} (was ${formatPrice(alert.oldPrice!)})`;
+      : `${name}: ${formatPrice(alert.newPrice)} (was ${formatPrice(alert.oldPrice)})`;
   });
   return [`PrysUil: ${alerts.length} alerts`, ...lines].join('\n');
 }

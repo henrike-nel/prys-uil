@@ -63,11 +63,18 @@ describe('store', () => {
     expect((await readPriceFiles(dataDir)).get('p1')).toEqual(file);
   });
 
-  it('rejects an invalid price file on read and on write', async () => {
+  it('skips an invalid price file on read instead of aborting the whole directory', async () => {
     mkdirSync(join(dataDir, 'prices'));
     writeFileSync(join(dataDir, 'prices', 'bad.json'), JSON.stringify({ productId: 'bad' }));
+    await writePriceFile(dataDir, file);
 
-    await expect(readPriceFiles(dataDir)).rejects.toThrow();
+    const files = await readPriceFiles(dataDir);
+
+    expect(files.get('p1')).toEqual(file);
+    expect(files.has('bad')).toBe(false);
+  });
+
+  it('rejects an invalid price file on write', async () => {
     await expect(
       writePriceFile(dataDir, { ...file, history: [{ at: 'yesterday', price: -1 }] }),
     ).rejects.toThrow();

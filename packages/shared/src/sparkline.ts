@@ -2,7 +2,6 @@ import type { PricePoint } from './schemas';
 
 const pad = 1; // keeps the stroke inside the box
 
-// SVG path `d` for a price history, scaled to fit a width x height box.
 export function sparklinePath(history: PricePoint[], width = 100, height = 24): string | undefined {
   if (history.length < 2) return undefined;
   const prices = history.map((point) => point.price);

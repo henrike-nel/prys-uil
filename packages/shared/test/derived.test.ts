@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { changeSinceAdded, currentPrice, lowestPrice } from '../src/derived';
-import { PriceFile } from '../src/schemas';
+import {
+  changeSinceAdded,
+  currentPrice,
+  displayName,
+  formatPercent,
+  lowestPrice,
+  percentChange,
+} from '../src/derived';
+import { PriceFile, Product } from '../src/schemas';
 
 function priceFile(prices: number[]): PriceFile {
   return PriceFile.parse({
@@ -34,5 +41,42 @@ describe('derived values', () => {
 
   it('report a price rise as a positive change', () => {
     expect(changeSinceAdded(priceFile([1000, 1250]))).toBe(25);
+  });
+});
+
+describe('percentChange', () => {
+  it('computes the signed percentage between two prices', () => {
+    expect(percentChange(1000, 800)).toBe(-20);
+    expect(percentChange(1000, 1250)).toBe(25);
+  });
+});
+
+describe('formatPercent', () => {
+  it('signs and rounds the percentage', () => {
+    expect(formatPercent(-20.6)).toBe('-21%');
+    expect(formatPercent(25)).toBe('+25%');
+    expect(formatPercent(0)).toBe('0%');
+    expect(formatPercent(-0.2)).toBe('0%');
+    expect(formatPercent(undefined)).toBe('–');
+  });
+});
+
+describe('displayName', () => {
+  const product = Product.parse({
+    id: 'p1',
+    url: 'https://www.takealot.com/item',
+    shop: 'takealot.com',
+    addedAt: '2026-10-01T00:00:00Z',
+  });
+  const file = priceFile([1000]);
+
+  it('prefers the name override', () => {
+    expect(displayName({ ...product, name: 'My name' }, file)).toBe('My name');
+  });
+
+  it('falls back to the scraped title, then the shop', () => {
+    expect(displayName(product, { ...file, title: 'Scraped title' })).toBe('Scraped title');
+    expect(displayName(product, file)).toBe('takealot.com');
+    expect(displayName(product)).toBe('takealot.com');
   });
 });

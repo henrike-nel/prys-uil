@@ -200,9 +200,13 @@ describe('run', () => {
     expect(file.history).toEqual([]);
   });
 
-  it('clears the failure count and error after a success', async () => {
+  it('clears the failure count, error and cant-read-alerted flag after a success', async () => {
     writeProducts([{}]);
-    writePrice('p1', [1000], { consecutiveFailures: 2, lastError: 'no price found' });
+    writePrice('p1', [1000], {
+      consecutiveFailures: 2,
+      lastError: 'no price found',
+      cantReadAlerted: true,
+    });
     const deps = setup(async () => page(1000));
 
     await run(deps);
@@ -210,6 +214,21 @@ describe('run', () => {
     const file = readPrice('p1');
     expect(file.consecutiveFailures).toBe(0);
     expect(file.lastError).toBeUndefined();
+    expect(file.cantReadAlerted).toBeUndefined();
+  });
+
+  it('retries the cant-read-price alert on a later run if delivery failed', async () => {
+    writeProducts([{}]);
+    const deps = setup(async () => {
+      throw new Error('HTTP 403');
+    });
+    deps.whatsapp.send.mockRejectedValueOnce(new Error('down'));
+    deps.github.send.mockRejectedValueOnce(new Error('down'));
+
+    for (let i = 0; i < 4; i++) await run(deps);
+
+    expect(deps.whatsapp.send).toHaveBeenCalledTimes(2);
+    expect(readPrice('p1').cantReadAlerted).toBe(true);
   });
 
   it('records the extraction error as the reason', async () => {

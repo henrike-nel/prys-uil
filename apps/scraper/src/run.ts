@@ -75,13 +75,17 @@ export async function run({
 
   const alerts: Alert[] = [];
   for (const { product, previous, file, newPrice } of results) {
-    if (newPrice !== undefined && previous && shouldAlert(product, previous, newPrice)) {
-      const oldPrice = previous.history.at(-1)?.price;
-      alerts.push({ kind: 'price-drop', product, priceFile: file, oldPrice, newPrice });
+    const oldPrice = previous?.history.at(-1)?.price;
+    if (newPrice !== undefined && previous && oldPrice !== undefined) {
+      if (shouldAlert(product, previous, newPrice)) {
+        alerts.push({ kind: 'price-drop', product, priceFile: file, oldPrice, newPrice });
+      }
     }
-    // Exactly 3, so a longer streak doesn't alert again; a success resets the count.
-    if (file.consecutiveFailures === 3)
+    // Fires at 3+ failures; cantReadAlerted (set only after a successful delivery)
+    // keeps retrying on later runs if delivery itself failed, mirroring lastAlertedPrice.
+    if (file.consecutiveFailures >= 3 && !file.cantReadAlerted) {
       alerts.push({ kind: 'cant-read-price', product, priceFile: file });
+    }
   }
 
   if (alerts.length > 0) {
@@ -92,6 +96,7 @@ export async function run({
     if (sentWhatsApp || sentGitHub) {
       for (const alert of alerts) {
         if (alert.kind === 'price-drop') alert.priceFile.lastAlertedPrice = alert.newPrice;
+        else alert.priceFile.cantReadAlerted = true;
       }
     }
   }
@@ -156,6 +161,7 @@ async function check(
   file.imageUrl = resolveUrl(extractImage(html), product.url) ?? file.imageUrl;
   delete file.lastError;
   file.consecutiveFailures = 0;
+  delete file.cantReadAlerted;
   console.log(`${name}: ${result.price}${changed ? ' (changed)' : ''}`);
   return { product, previous, file, newPrice: result.price, changed };
 }

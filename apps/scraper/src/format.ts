@@ -1,4 +1,6 @@
-import type { PriceFile, Product } from '@prysuil/shared';
+import { formatPercent, percentChange } from '@prysuil/shared';
+
+export { displayName } from '@prysuil/shared';
 
 const number = new Intl.NumberFormat('en-ZA', { maximumFractionDigits: 0 });
 
@@ -8,10 +10,5 @@ export function formatPrice(price: number): string {
 }
 
 export function formatChange(oldPrice: number, newPrice: number): string {
-  const percent = Math.round(((newPrice - oldPrice) / oldPrice) * 100);
-  return `${percent > 0 ? '+' : ''}${percent}%`;
-}
-
-export function displayName(product: Product, priceFile: PriceFile): string {
-  return product.name ?? priceFile.title ?? product.shop;
+  return formatPercent(percentChange(oldPrice, newPrice));
 }

@@ -14,6 +14,13 @@ describe('normalizeUrl', () => {
     );
   });
 
+  it('strips tracking params regardless of case', () => {
+    expect(normalizeUrl('https://shop.example/item?UTM_Source=x&UTM_Campaign=y')).toBe(
+      'https://shop.example/item',
+    );
+    expect(normalizeUrl('https://shop.example/item?GCLID=1')).toBe('https://shop.example/item');
+  });
+
   it('keeps other params in their original order', () => {
     expect(normalizeUrl('https://shop.example/item?size=10&utm_source=x&colour=red&gclid=1')).toBe(
       'https://shop.example/item?size=10&colour=red',

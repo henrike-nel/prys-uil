@@ -81,10 +81,10 @@ describe('visibleProducts', () => {
     product({ id: 'e', name: 'Echo' }),
   ];
   const priceFiles = {
-    a: priceFile([1000, 900]), // -10%
-    b: priceFile([1000, 500]), // -50%
-    c: priceFile([1000, 700]), // -30%
-    d: priceFile([1000, 1100]), // +10%
+    a: priceFile([1000, 900]),
+    b: priceFile([1000, 500]),
+    c: priceFile([1000, 700]),
+    d: priceFile([1000, 1100]),
   };
   const ids = (list: Product[]) => list.map((p) => p.id);
 

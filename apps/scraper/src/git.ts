@@ -1,7 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 
-// Commits and pushes data/prices. Returns false when there was nothing to commit.
 export function commitPrices(dataDir: string, message: string): boolean {
   const git = (...args: string[]) =>
     execFileSync('git', args, { cwd: join(dataDir, '..'), encoding: 'utf8' });
@@ -12,7 +11,9 @@ export function commitPrices(dataDir: string, message: string): boolean {
   git('commit', '-m', message);
   try {
     git('push');
-  } catch {
+  } catch (error) {
+    const reason = error instanceof Error ? error.message.split('\n')[0] : String(error);
+    console.log(`push failed, retrying after pull --rebase: ${reason}`);
     git('pull', '--rebase');
     git('push');
   }

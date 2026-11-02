@@ -42,7 +42,11 @@ export function createRepo(
       );
       if (response.status === 404) return undefined;
       if (!response.ok) throw new Error(`Couldn't load ${path} (HTTP ${response.status}).`);
-      return { json: await response.json(), sha: null };
+      try {
+        return { json: await response.json(), sha: null };
+      } catch {
+        throw new Error(`Couldn't load ${path} (invalid response).`);
+      }
     }
     try {
       const { data } = await octokit.rest.repos.getContent({ owner, repo, path });

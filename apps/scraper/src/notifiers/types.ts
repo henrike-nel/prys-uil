@@ -1,12 +1,14 @@
 import type { PriceFile, Product } from '@prysuil/shared';
 
-export interface Alert {
-  kind: 'price-drop' | 'cant-read-price';
-  product: Product;
-  priceFile: PriceFile;
-  oldPrice?: number;
-  newPrice?: number;
-}
+export type Alert =
+  | {
+      kind: 'price-drop';
+      product: Product;
+      priceFile: PriceFile;
+      oldPrice: number;
+      newPrice: number;
+    }
+  | { kind: 'cant-read-price'; product: Product; priceFile: PriceFile };
 
 export interface Notifier {
   name: string;

@@ -17,8 +17,14 @@ export async function readPriceFiles(dataDir: string): Promise<Map<string, Price
   );
   const files = new Map<string, PriceFile>();
   for (const name of names.filter((name) => name.endsWith('.json'))) {
-    const file = PriceFile.parse(await readJson(join(dir, name)));
-    files.set(file.productId, file);
+    try {
+      const file = PriceFile.parse(await readJson(join(dir, name)));
+      files.set(file.productId, file);
+    } catch (error) {
+      console.log(
+        `Skipping invalid price file ${name}: ${error instanceof Error ? error.message : error}`,
+      );
+    }
   }
   return files;
 }

@@ -240,6 +240,12 @@ describe('without a token', () => {
     await expect(createRepo(null).readProducts()).rejects.toThrow('HTTP 500');
   });
 
+  it('reports a friendly error for a 200 response that is not valid JSON', async () => {
+    stubFetch(new Response('<html>not json</html>', { status: 200 }));
+
+    await expect(createRepo(null).readProducts()).rejects.toThrow('invalid response');
+  });
+
   it('cannot write', async () => {
     await expect(createRepo(null).writeProducts(productsFile(), null, 'msg')).rejects.toThrow(
       'Settings',

@@ -32,8 +32,12 @@ export async function load() {
     app.products = file.products;
     await Promise.all(
       file.products.map(async (product) => {
-        const priceFile = await repo.readPriceFile(product.id);
-        if (priceFile) app.priceFiles[product.id] = priceFile;
+        try {
+          const priceFile = await repo.readPriceFile(product.id);
+          if (priceFile) app.priceFiles[product.id] = priceFile;
+        } catch (error) {
+          console.error(`Couldn't load price history for ${product.shop}:`, error);
+        }
       }),
     );
   } catch (error) {

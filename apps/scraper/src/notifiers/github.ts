@@ -63,16 +63,18 @@ export class GitHubIssuesNotifier implements Notifier {
   }
 }
 
-function facts({ kind, product, priceFile, oldPrice, newPrice }: Alert): string {
+function facts(alert: Alert): string {
+  const { product, priceFile } = alert;
   const shop = `[${product.shop}](${product.url})`;
-  if (kind === 'cant-read-price') {
+  if (alert.kind === 'cant-read-price') {
     return `Can't read the price (${priceFile.lastError}). Set a CSS selector or enable "use browser".\n\nShop: ${shop}`;
   }
+  const { oldPrice, newPrice } = alert;
   const lowest = lowestPrice(priceFile);
   return [
-    `- Current price: ${formatPrice(newPrice!)}`,
-    `- Previous price: ${formatPrice(oldPrice!)}`,
-    `- Change: ${formatChange(oldPrice!, newPrice!)}`,
+    `- Current price: ${formatPrice(newPrice)}`,
+    `- Previous price: ${formatPrice(oldPrice)}`,
+    `- Change: ${formatChange(oldPrice, newPrice)}`,
     `- Target: ${product.targetPrice ? formatPrice(product.targetPrice) : 'none'}`,
     `- Lowest seen: ${lowest === undefined ? 'none' : formatPrice(lowest)}`,
     `- Tracking since: ${product.addedAt.slice(0, 10)}`,
