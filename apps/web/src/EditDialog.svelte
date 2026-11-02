@@ -48,7 +48,6 @@
       Name
       <input bind:value={form.name} placeholder="Uses the shop's title when empty" />
     </label>
-    <label>For whom <input bind:value={form.forWhom} /></label>
     <label>
       Target price (R)
       <input type="number" bind:value={form.targetPrice} min="0.01" step="0.01" />

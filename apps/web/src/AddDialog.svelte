@@ -33,7 +33,6 @@
   <form onsubmit={save}>
     <h2>Add product</h2>
     <label>Link <input bind:value={form.url} required inputmode="url" autocomplete="off" /></label>
-    <label>For whom <input bind:value={form.forWhom} /></label>
     <label>
       Target price (R)
       <input type="number" bind:value={form.targetPrice} min="0.01" step="0.01" />

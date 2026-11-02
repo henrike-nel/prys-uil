@@ -4,13 +4,12 @@
   import AddDialog from './AddDialog.svelte';
   import lockup from './assets/prysuil-lockup.svg';
   import EditDialog from './EditDialog.svelte';
-  import { forWhomNames, visibleProducts } from './lib/list';
+  import { visibleProducts } from './lib/list';
   import { sharedUrl } from './lib/share';
   import { app, load } from './lib/state.svelte';
   import ProductCard from './ProductCard.svelte';
   import SettingsDialog from './SettingsDialog.svelte';
 
-  let forWhom = $state('');
   let hideBought = $state(true);
   // Opened from a share or the iOS Shortcut. Drop the query so a reload doesn't reopen it.
   let shared = $state(sharedUrl(location.search));
@@ -20,8 +19,7 @@
 
   if (location.search) history.replaceState(null, '', location.pathname);
 
-  const names = $derived(forWhomNames(app.products));
-  const products = $derived(visibleProducts(app.products, app.priceFiles, { forWhom, hideBought }));
+  const products = $derived(visibleProducts(app.products, app.priceFiles, { hideBought }));
 
   void load();
 </script>
@@ -41,15 +39,6 @@
   {/if}
 
   <div class="toolbar">
-    <label>
-      For whom
-      <select bind:value={forWhom}>
-        <option value="">All</option>
-        {#each names as name (name)}
-          <option>{name}</option>
-        {/each}
-      </select>
-    </label>
     <label><input type="checkbox" bind:checked={hideBought} /> Hide bought</label>
     {#if app.token}
       <button type="button" class="primary" onclick={() => (adding = true)}>Add product</button>

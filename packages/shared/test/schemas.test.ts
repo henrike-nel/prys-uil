@@ -26,7 +26,6 @@ describe('Product', () => {
     const product = Product.parse({
       ...minimalProduct,
       name: 'Headphones',
-      forWhom: 'Dad',
       targetPrice: 999.5,
       minDropPercent: 0,
       selector: '.price',
