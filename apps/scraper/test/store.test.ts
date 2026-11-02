@@ -30,7 +30,10 @@ describe('store', () => {
       currency: 'ZAR',
       products: [],
     });
-    await expect(readPriceFiles(dataDir)).resolves.toEqual(new Map());
+    await expect(readPriceFiles(dataDir)).resolves.toEqual({
+      files: new Map(),
+      invalidIds: new Set(),
+    });
   });
 
   it('reads and validates products.json', async () => {
@@ -60,7 +63,7 @@ describe('store', () => {
 
     const raw = readFileSync(join(dataDir, 'prices', 'p1.json'), 'utf8');
     expect(raw).toBe(JSON.stringify(file, null, 2) + '\n');
-    expect((await readPriceFiles(dataDir)).get('p1')).toEqual(file);
+    expect((await readPriceFiles(dataDir)).files.get('p1')).toEqual(file);
   });
 
   it('skips an invalid price file on read instead of aborting the whole directory', async () => {
@@ -68,10 +71,21 @@ describe('store', () => {
     writeFileSync(join(dataDir, 'prices', 'bad.json'), JSON.stringify({ productId: 'bad' }));
     await writePriceFile(dataDir, file);
 
-    const files = await readPriceFiles(dataDir);
+    const { files, invalidIds } = await readPriceFiles(dataDir);
 
     expect(files.get('p1')).toEqual(file);
     expect(files.has('bad')).toBe(false);
+    expect(invalidIds).toEqual(new Set(['bad']));
+  });
+
+  it('treats malformed JSON as invalid too, not a crash', async () => {
+    mkdirSync(join(dataDir, 'prices'));
+    writeFileSync(join(dataDir, 'prices', 'broken.json'), '{ not json');
+
+    const { files, invalidIds } = await readPriceFiles(dataDir);
+
+    expect(files.has('broken')).toBe(false);
+    expect(invalidIds).toEqual(new Set(['broken']));
   });
 
   it('rejects an invalid price file on write', async () => {

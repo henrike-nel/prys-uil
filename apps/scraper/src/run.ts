@@ -1,4 +1,5 @@
 import {
+  errorMessage,
   extractImage,
   extractPrice,
   extractTitle,
@@ -13,10 +14,10 @@ import { displayName } from './format';
 import { commitPrices } from './git';
 import { CallMeBotNotifier } from './notifiers/callmebot';
 import { GitHubIssuesNotifier, type IssueClose } from './notifiers/github';
-import type { Alert, Notifier } from './notifiers/types';
+import type { Alert, Notifier, SendOptions } from './notifiers/types';
 import { DATA_DIR, deletePriceFile, readPriceFiles, readProducts, writePriceFile } from './store';
 
-type GitHub = Notifier & Pick<GitHubIssuesNotifier, 'mentionOwner' | 'closeIssues'>;
+type GitHub = Notifier & Pick<GitHubIssuesNotifier, 'closeIssue'>;
 
 export interface Deps {
   dataDir: string;
@@ -44,7 +45,7 @@ export async function run({
   commit = (message) => commitPrices(dataDir, message),
 }: Partial<Deps> = {}): Promise<void> {
   const { products } = await readProducts(dataDir);
-  const files = await readPriceFiles(dataDir);
+  const { files, invalidIds } = await readPriceFiles(dataDir);
 
   // The price file is the only record of a product's issue, so a removed product's
   // file is kept until its issue is closed.
@@ -61,8 +62,18 @@ export async function run({
       closes.push({ issueNumber: file.issueNumber, reason: 'bought', file });
     }
   }
+  // An invalid file can't tell us its issue number, so a removed product's orphan
+  // is deleted without closing its issue; an active one is left alone (not reset
+  // to "never scraped") until someone fixes or replaces the file by hand.
+  for (const id of invalidIds) {
+    if (ids.has(id)) console.log(`${id}: price file is corrupt, skipping until it's fixed`);
+    else {
+      console.log(`${id}: price file is corrupt; deleting the orphan (close its issue by hand)`);
+      await deletePriceFile(dataDir, id);
+    }
+  }
 
-  const active = products.filter((product) => !product.bought);
+  const active = products.filter((product) => !product.bought && !invalidIds.has(product.id));
   const throttle = createThrottle();
   const results = await Promise.all(
     active.map((product) => {
@@ -91,8 +102,7 @@ export async function run({
   if (alerts.length > 0) {
     console.log(`Sending ${alerts.length} alert(s)`);
     const sentWhatsApp = await deliver(whatsapp, alerts);
-    github.mentionOwner = !sentWhatsApp;
-    const sentGitHub = await deliver(github, alerts);
+    const sentGitHub = await deliver(github, alerts, { mentionOwner: !sentWhatsApp });
     if (sentWhatsApp || sentGitHub) {
       for (const alert of alerts) {
         if (alert.kind === 'price-drop') alert.priceFile.lastAlertedPrice = alert.newPrice;
@@ -103,7 +113,7 @@ export async function run({
 
   for (const close of closes) {
     try {
-      await github.closeIssues([close]);
+      await github.closeIssue(close);
       if (close.reason === 'deleted') {
         await deletePriceFile(dataDir, close.file.productId);
       } else {
@@ -111,7 +121,7 @@ export async function run({
         await writePriceFile(dataDir, close.file);
       }
     } catch (error) {
-      console.log(`Could not close issue #${close.issueNumber}: ${reason(error)}`);
+      console.log(`Could not close issue #${close.issueNumber}: ${errorMessage(error)}`);
     }
   }
 
@@ -134,7 +144,7 @@ async function check(
     html = await load();
     result = extractPrice(html, product.selector);
   } catch (error) {
-    result = { error: reason(error) };
+    result = { error: errorMessage(error) };
   }
 
   const at = new Date().toISOString();
@@ -166,13 +176,17 @@ async function check(
   return { product, previous, file, newPrice: result.price, changed };
 }
 
-async function deliver(notifier: Notifier, alerts: Alert[]): Promise<boolean> {
+async function deliver(
+  notifier: Notifier,
+  alerts: Alert[],
+  options?: SendOptions,
+): Promise<boolean> {
   if (!notifier.enabled()) return false;
   try {
-    await notifier.send(alerts);
+    await notifier.send(alerts, options);
     return true;
   } catch (error) {
-    console.log(`${notifier.name} failed: ${reason(error)}`);
+    console.log(`${notifier.name} failed: ${errorMessage(error)}`);
     return false;
   }
 }
@@ -184,11 +198,4 @@ function resolveUrl(url: string | undefined, base: string): string | undefined {
   } catch {
     return undefined;
   }
-}
-
-// A short reason for the price file and the logs, e.g. "HTTP 403" or "timeout".
-function reason(error: unknown): string {
-  if (!(error instanceof Error)) return String(error);
-  if (error.name === 'TimeoutError') return 'timeout';
-  return error.message.split('\n')[0] ?? error.message;
 }

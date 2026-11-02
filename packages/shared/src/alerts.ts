@@ -1,3 +1,4 @@
+import { isBelowTarget } from './derived';
 import type { PriceFile, Product } from './schemas';
 
 export function shouldAlert(product: Product, priceFile: PriceFile, newPrice: number): boolean {
@@ -7,7 +8,6 @@ export function shouldAlert(product: Product, priceFile: PriceFile, newPrice: nu
   if (newPrice === priceFile.lastAlertedPrice) return false;
 
   const reference = priceFile.lastAlertedPrice ?? first.price;
-  const belowTarget = product.targetPrice !== undefined && newPrice <= product.targetPrice;
   const dropPercent = ((reference - newPrice) / reference) * 100;
-  return belowTarget || dropPercent >= product.minDropPercent;
+  return isBelowTarget(product, newPrice) || dropPercent >= product.minDropPercent;
 }

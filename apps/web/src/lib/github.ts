@@ -51,7 +51,12 @@ export function createRepo(
     try {
       const { data } = await octokit.rest.repos.getContent({ owner, repo, path });
       if (Array.isArray(data) || data.type !== 'file') throw new Error(`${path} is not a file.`);
-      return { json: JSON.parse(decodeBase64(data.content)), sha: data.sha };
+      if (data.content === undefined) throw new Error(`Couldn't load ${path} (file too large).`);
+      try {
+        return { json: JSON.parse(decodeBase64(data.content)), sha: data.sha };
+      } catch {
+        throw new Error(`Couldn't load ${path} (invalid response).`);
+      }
     } catch (error) {
       if (status(error) === 404) return undefined;
       throw error;

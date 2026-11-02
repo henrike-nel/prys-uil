@@ -1,5 +1,6 @@
 export * from './alerts';
 export * from './derived';
+export * from './errors';
 export * from './extract';
 export * from './price';
 export * from './schemas';

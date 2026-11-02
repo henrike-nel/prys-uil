@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
+import { errorMessage } from '@prysuil/shared';
 
 export function commitPrices(dataDir: string, message: string): boolean {
   const git = (...args: string[]) =>
@@ -12,8 +13,7 @@ export function commitPrices(dataDir: string, message: string): boolean {
   try {
     git('push');
   } catch (error) {
-    const reason = error instanceof Error ? error.message.split('\n')[0] : String(error);
-    console.log(`push failed, retrying after pull --rebase: ${reason}`);
+    console.log(`push failed, retrying after pull --rebase: ${errorMessage(error)}`);
     git('pull', '--rebase');
     git('push');
   }

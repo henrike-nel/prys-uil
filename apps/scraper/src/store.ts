@@ -10,23 +10,41 @@ export async function readProducts(dataDir: string): Promise<ProductsFile> {
   return ProductsFile.parse(json ?? { version: 1, currency: 'ZAR', products: [] });
 }
 
-export async function readPriceFiles(dataDir: string): Promise<Map<string, PriceFile>> {
+export interface PriceFiles {
+  files: Map<string, PriceFile>;
+  // Filenames (productIds) whose content failed validation. Callers should leave
+  // these alone rather than overwrite or silently treat the product as new.
+  invalidIds: Set<string>;
+}
+
+export async function readPriceFiles(dataDir: string): Promise<PriceFiles> {
   const dir = join(dataDir, 'prices');
   const names = await readdir(dir).catch((error) =>
     isMissing(error) ? [] : Promise.reject(error),
   );
   const files = new Map<string, PriceFile>();
+  const invalidIds = new Set<string>();
   for (const name of names.filter((name) => name.endsWith('.json'))) {
+    const productId = name.slice(0, -'.json'.length);
+    let json: unknown;
     try {
-      const file = PriceFile.parse(await readJson(join(dir, name)));
-      files.set(file.productId, file);
+      json = await readJson(join(dir, name));
     } catch (error) {
-      console.log(
-        `Skipping invalid price file ${name}: ${error instanceof Error ? error.message : error}`,
-      );
+      // A malformed JSON file is invalid content, not a missing/permission error.
+      if (!(error instanceof SyntaxError)) throw error;
+      console.log(`Skipping invalid price file ${name}: ${error.message}`);
+      invalidIds.add(productId);
+      continue;
+    }
+    const parsed = PriceFile.safeParse(json);
+    if (parsed.success) {
+      files.set(parsed.data.productId, parsed.data);
+    } else {
+      console.log(`Skipping invalid price file ${name}: ${parsed.error.message}`);
+      invalidIds.add(productId);
     }
   }
-  return files;
+  return { files, invalidIds };
 }
 
 export async function writePriceFile(dataDir: string, file: PriceFile): Promise<void> {

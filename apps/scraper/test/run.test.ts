@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PriceFile, type Product } from '@prysuil/shared';
 import type { IssueClose } from '../src/notifiers/github';
-import type { Alert } from '../src/notifiers/types';
+import type { Alert, SendOptions } from '../src/notifiers/types';
 import { run } from '../src/run';
 
 let dataDir: string;
@@ -63,7 +63,7 @@ function setup(load: (url: string) => Promise<string>) {
   const notifier = (name: string) => ({
     name,
     enabled: vi.fn(() => true),
-    send: vi.fn<(alerts: Alert[]) => Promise<void>>(async () => {}),
+    send: vi.fn<(alerts: Alert[], options?: SendOptions) => Promise<void>>(async () => {}),
   });
   return {
     dataDir,
@@ -72,8 +72,7 @@ function setup(load: (url: string) => Promise<string>) {
     whatsapp: notifier('whatsapp'),
     github: {
       ...notifier('github'),
-      mentionOwner: true,
-      closeIssues: vi.fn<(closes: IssueClose[]) => Promise<void>>(async () => {}),
+      closeIssue: vi.fn<(close: IssueClose) => Promise<void>>(async () => {}),
     },
     commit: vi.fn<(message: string) => void>(),
   };
@@ -85,8 +84,8 @@ describe('run', () => {
     writePrice('p1', [1000]);
     const deps = setup(async () => page(900));
     let mentioned: boolean | undefined;
-    deps.github.send.mockImplementation(async () => {
-      mentioned = deps.github.mentionOwner;
+    deps.github.send.mockImplementation(async (_alerts, options) => {
+      mentioned = options?.mentionOwner;
     });
 
     await run(deps);
@@ -95,7 +94,7 @@ describe('run', () => {
     const alerts = deps.whatsapp.send.mock.calls[0]![0];
     expect(alerts).toHaveLength(1);
     expect(alerts[0]).toMatchObject({ kind: 'price-drop', oldPrice: 1000, newPrice: 900 });
-    expect(deps.github.send).toHaveBeenCalledWith(alerts);
+    expect(deps.github.send).toHaveBeenCalledWith(alerts, { mentionOwner: false });
     expect(mentioned).toBe(false);
 
     const file = readPrice('p1');
@@ -145,7 +144,6 @@ describe('run', () => {
     const file = readPrice('p1');
     expect(file.lastAlertedPrice).toBeUndefined();
     expect(file.history.map((point) => point.price)).toEqual([1000, 900]);
-    expect(deps.github.mentionOwner).toBe(true);
     expect(deps.commit).toHaveBeenCalled();
   });
 
@@ -155,9 +153,8 @@ describe('run', () => {
     const deps = setup(async () => page(900));
     let mentioned: boolean | undefined;
     deps.whatsapp.enabled.mockReturnValue(false);
-    deps.github.mentionOwner = false;
-    deps.github.send.mockImplementation(async () => {
-      mentioned = deps.github.mentionOwner;
+    deps.github.send.mockImplementation(async (_alerts, options) => {
+      mentioned = options?.mentionOwner;
     });
 
     await run(deps);
@@ -173,9 +170,8 @@ describe('run', () => {
     const deps = setup(async () => page(900));
     let mentioned: boolean | undefined;
     deps.whatsapp.send.mockRejectedValue(new Error('down'));
-    deps.github.mentionOwner = false;
-    deps.github.send.mockImplementation(async () => {
-      mentioned = deps.github.mentionOwner;
+    deps.github.send.mockImplementation(async (_alerts, options) => {
+      mentioned = options?.mentionOwner;
     });
 
     await run(deps);
@@ -251,24 +247,48 @@ describe('run', () => {
 
     expect(existsSync(join(dataDir, 'prices', 'gone.json'))).toBe(false);
     expect(existsSync(join(dataDir, 'prices', 'old.json'))).toBe(false);
-    expect(deps.github.closeIssues).toHaveBeenCalledTimes(1);
-    expect(deps.github.closeIssues).toHaveBeenCalledWith([
+    expect(deps.github.closeIssue).toHaveBeenCalledTimes(1);
+    expect(deps.github.closeIssue).toHaveBeenCalledWith(
       expect.objectContaining({ issueNumber: 7, reason: 'deleted' }),
-    ]);
+    );
   });
 
   it("keeps a removed product's price file until its issue is closed", async () => {
     writeProducts([]);
     writePrice('gone', [500], { issueNumber: 7 });
     const deps = setup(async () => page(1000));
-    deps.github.closeIssues.mockRejectedValueOnce(new Error('down'));
+    deps.github.closeIssue.mockRejectedValueOnce(new Error('down'));
 
     await run(deps);
     expect(existsSync(join(dataDir, 'prices', 'gone.json'))).toBe(true);
 
     await run(deps);
     expect(existsSync(join(dataDir, 'prices', 'gone.json'))).toBe(false);
-    expect(deps.github.closeIssues).toHaveBeenCalledTimes(2);
+    expect(deps.github.closeIssue).toHaveBeenCalledTimes(2);
+  });
+
+  it("skips an active product's corrupt price file instead of resetting its history", async () => {
+    writeProducts([{}]);
+    mkdirSync(join(dataDir, 'prices'));
+    writeFileSync(join(dataDir, 'prices', 'p1.json'), '{ not json');
+    const deps = setup(async () => page(900));
+
+    await run(deps);
+
+    expect(deps.fetchHtml).not.toHaveBeenCalled();
+    expect(readFileSync(join(dataDir, 'prices', 'p1.json'), 'utf8')).toBe('{ not json');
+  });
+
+  it("deletes a removed product's corrupt price file without closing an issue", async () => {
+    writeProducts([]);
+    mkdirSync(join(dataDir, 'prices'));
+    writeFileSync(join(dataDir, 'prices', 'gone.json'), '{ not json');
+    const deps = setup(async () => page(900));
+
+    await run(deps);
+
+    expect(existsSync(join(dataDir, 'prices', 'gone.json'))).toBe(false);
+    expect(deps.github.closeIssue).not.toHaveBeenCalled();
   });
 
   it('does not fetch a bought product and closes its issue', async () => {
@@ -279,9 +299,9 @@ describe('run', () => {
     await run(deps);
 
     expect(deps.fetchHtml).not.toHaveBeenCalled();
-    expect(deps.github.closeIssues).toHaveBeenCalledWith([
+    expect(deps.github.closeIssue).toHaveBeenCalledWith(
       expect.objectContaining({ issueNumber: 9, reason: 'bought' }),
-    ]);
+    );
     const file = readPrice('p1');
     expect(file.issueNumber).toBeUndefined();
     expect(file.history).toHaveLength(1);
@@ -291,7 +311,7 @@ describe('run', () => {
     writeProducts([{ bought: true }]);
     writePrice('p1', [1000], { issueNumber: 9 });
     const deps = setup(async () => page(900));
-    deps.github.closeIssues.mockRejectedValue(new Error('down'));
+    deps.github.closeIssue.mockRejectedValue(new Error('down'));
 
     await run(deps);
 

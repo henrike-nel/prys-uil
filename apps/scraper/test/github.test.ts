@@ -10,6 +10,9 @@ function setup() {
     create: vi.fn<(params: object) => Promise<object>>(async () => ({ data: { number: 42 } })),
     createComment: request(),
     addLabels: request(),
+    removeLabel: vi.fn<(params: object) => Promise<object>>(async () => {
+      throw Object.assign(new Error('Not Found'), { status: 404 });
+    }),
     update: request(),
   };
   const octokit = { rest: { issues } } as unknown as Octokit;
@@ -92,10 +95,8 @@ describe('GitHubIssuesNotifier', () => {
   it('mentions the owner only when asked to', async () => {
     const { issues, notifier } = setup();
 
-    notifier.mentionOwner = true;
-    await notifier.send([drop(), drop({ issueNumber: 7 })]);
-    notifier.mentionOwner = false;
-    await notifier.send([drop(), drop({ issueNumber: 7 })]);
+    await notifier.send([drop(), drop({ issueNumber: 7 })], { mentionOwner: true });
+    await notifier.send([drop(), drop({ issueNumber: 7 })], { mentionOwner: false });
 
     expect(bodyOf(issues.create.mock.calls[0])).toContain('@owner');
     expect(bodyOf(issues.createComment.mock.calls[0])).toContain('@owner');
@@ -146,13 +147,27 @@ describe('GitHubIssuesNotifier', () => {
     );
   });
 
-  it('closes issues with a final comment', async () => {
+  it('removes the other kind label when an issue switches kind', async () => {
     const { issues, notifier } = setup();
 
-    await notifier.closeIssues([
-      { issueNumber: 7, reason: 'bought' },
-      { issueNumber: 8, reason: 'deleted' },
-    ]);
+    await notifier.send([drop({ issueNumber: 7 })]);
+
+    expect(issues.removeLabel).toHaveBeenCalledWith(
+      expect.objectContaining({ issue_number: 7, name: 'scrape-error' }),
+    );
+  });
+
+  it('does not fail when the other kind label was never set', async () => {
+    const { notifier } = setup();
+
+    await expect(notifier.send([drop({ issueNumber: 7 })])).resolves.toBeUndefined();
+  });
+
+  it('closes an issue with a final comment', async () => {
+    const { issues, notifier } = setup();
+
+    await notifier.closeIssue({ issueNumber: 7, reason: 'bought' });
+    await notifier.closeIssue({ issueNumber: 8, reason: 'deleted' });
 
     expect(issues.createComment).toHaveBeenCalledWith(
       expect.objectContaining({ issue_number: 7, body: 'Marked as bought, closing.' }),

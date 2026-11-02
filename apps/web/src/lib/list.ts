@@ -1,4 +1,10 @@
-import { changeSinceAdded, currentPrice, type PriceFile, type Product } from '@prysuil/shared';
+import {
+  changeSinceAdded,
+  currentPrice,
+  isBelowTarget,
+  type PriceFile,
+  type Product,
+} from '@prysuil/shared';
 import { displayName } from './format';
 
 export type Badge = 'bought' | 'cant-read' | 'below-target' | 'dropped' | 'checking';
@@ -16,7 +22,7 @@ export function badge(product: Product, priceFile?: PriceFile): Badge | undefine
   if (priceFile?.lastError) return 'cant-read';
   const current = priceFile && currentPrice(priceFile);
   if (!priceFile || current === undefined) return 'checking';
-  if (product.targetPrice !== undefined && current <= product.targetPrice) return 'below-target';
+  if (isBelowTarget(product, current)) return 'below-target';
   if ((changeSinceAdded(priceFile) ?? 0) < 0) return 'dropped';
   return undefined;
 }

@@ -4,6 +4,7 @@ import {
   currentPrice,
   displayName,
   formatPercent,
+  isBelowTarget,
   lowestPrice,
   percentChange,
 } from '../src/derived';
@@ -78,5 +79,25 @@ describe('displayName', () => {
     expect(displayName(product, { ...file, title: 'Scraped title' })).toBe('Scraped title');
     expect(displayName(product, file)).toBe('takealot.com');
     expect(displayName(product)).toBe('takealot.com');
+  });
+});
+
+describe('isBelowTarget', () => {
+  const product = Product.parse({
+    id: 'p1',
+    url: 'https://shop.example/item',
+    shop: 'shop.example',
+    addedAt: '2026-10-01T00:00:00Z',
+  });
+
+  it('is false without a target price', () => {
+    expect(isBelowTarget(product, 1)).toBe(false);
+  });
+
+  it('is true at or below the target price, false above it', () => {
+    const withTarget = { ...product, targetPrice: 900 };
+    expect(isBelowTarget(withTarget, 900)).toBe(true);
+    expect(isBelowTarget(withTarget, 899)).toBe(true);
+    expect(isBelowTarget(withTarget, 901)).toBe(false);
   });
 });

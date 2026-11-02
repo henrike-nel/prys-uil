@@ -10,8 +10,12 @@ export type Alert =
     }
   | { kind: 'cant-read-price'; product: Product; priceFile: PriceFile };
 
+export interface SendOptions {
+  mentionOwner?: boolean;
+}
+
 export interface Notifier {
   name: string;
   enabled(): boolean; // true when its secrets are set
-  send(alerts: Alert[]): Promise<void>; // throws on failure
+  send(alerts: Alert[], options?: SendOptions): Promise<void>; // throws on failure
 }

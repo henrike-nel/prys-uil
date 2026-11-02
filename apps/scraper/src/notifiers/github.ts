@@ -1,7 +1,7 @@
 import { Octokit } from '@octokit/rest';
 import { lowestPrice } from '@prysuil/shared';
 import { displayName, formatChange, formatPrice } from '../format';
-import type { Alert, Notifier } from './types';
+import type { Alert, Notifier, SendOptions } from './types';
 
 export type IssueClose = { issueNumber: number; reason: 'bought' | 'deleted' };
 
@@ -12,8 +12,6 @@ const closeComments = {
 
 export class GitHubIssuesNotifier implements Notifier {
   name = 'github';
-  // Set by the run: false when WhatsApp already delivered, so the owner isn't pinged twice.
-  mentionOwner = true;
   private repo: { owner: string; repo: string };
 
   constructor(
@@ -28,13 +26,14 @@ export class GitHubIssuesNotifier implements Notifier {
     return true;
   }
 
-  async send(alerts: Alert[]): Promise<void> {
+  async send(alerts: Alert[], options?: SendOptions): Promise<void> {
     for (const alert of alerts) {
       const { issues } = this.octokit.rest;
       const drop = alert.kind === 'price-drop';
       const label = drop ? 'price-drop' : 'scrape-error';
+      const staleLabel = drop ? 'scrape-error' : 'price-drop';
       const issueNumber = alert.priceFile.issueNumber;
-      const mention = this.mentionOwner ? [`@${this.repo.owner}`] : [];
+      const mention = options?.mentionOwner ? [`@${this.repo.owner}`] : [];
 
       if (issueNumber === undefined) {
         const image = alert.priceFile.imageUrl ? [`![](${alert.priceFile.imageUrl})`] : [];
@@ -49,17 +48,22 @@ export class GitHubIssuesNotifier implements Notifier {
         const body = [...mention, facts(alert)].join('\n\n');
         await issues.createComment({ ...this.repo, issue_number: issueNumber, body });
         await issues.addLabels({ ...this.repo, issue_number: issueNumber, labels: [label] });
+        // The issue may have switched kind (e.g. scrape-error -> price-drop); drop
+        // the other kind's label so it doesn't accumulate both forever.
+        await issues
+          .removeLabel({ ...this.repo, issue_number: issueNumber, name: staleLabel })
+          .catch((error: { status?: number }) => {
+            if (error.status !== 404) throw error;
+          });
       }
     }
   }
 
-  async closeIssues(closes: IssueClose[]): Promise<void> {
+  async closeIssue({ issueNumber, reason }: IssueClose): Promise<void> {
     const { issues } = this.octokit.rest;
-    for (const { issueNumber, reason } of closes) {
-      const body = closeComments[reason];
-      await issues.createComment({ ...this.repo, issue_number: issueNumber, body });
-      await issues.update({ ...this.repo, issue_number: issueNumber, state: 'closed' });
-    }
+    const body = closeComments[reason];
+    await issues.createComment({ ...this.repo, issue_number: issueNumber, body });
+    await issues.update({ ...this.repo, issue_number: issueNumber, state: 'closed' });
   }
 }
 

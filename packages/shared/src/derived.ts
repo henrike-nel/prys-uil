@@ -30,3 +30,7 @@ export function formatPercent(change: number | undefined): string {
 export function displayName(product: Product, priceFile?: PriceFile): string {
   return product.name ?? priceFile?.title ?? product.shop;
 }
+
+export function isBelowTarget(product: Product, price: number): boolean {
+  return product.targetPrice !== undefined && price <= product.targetPrice;
+}

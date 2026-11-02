@@ -1,4 +1,4 @@
-import type { PriceFile, Product, ProductsFile } from '@prysuil/shared';
+import { errorMessage, type PriceFile, type Product, type ProductsFile } from '@prysuil/shared';
 import { displayName } from './format';
 import { createRepo } from './github';
 
@@ -35,7 +35,11 @@ export async function load() {
         try {
           const priceFile = await repo.readPriceFile(product.id);
           if (priceFile) app.priceFiles[product.id] = priceFile;
+          else delete app.priceFiles[product.id];
         } catch (error) {
+          // Drop any previously-loaded price file rather than leave it on screen
+          // looking current when this reload couldn't confirm it.
+          delete app.priceFiles[product.id];
           console.error(`Couldn't load price history for ${product.shop}:`, error);
         }
       }),
@@ -76,6 +80,4 @@ export function deleteProduct(product: Product) {
   );
 }
 
-export function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
+export { errorMessage };

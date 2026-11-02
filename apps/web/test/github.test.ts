@@ -97,6 +97,22 @@ describe('with a token', () => {
     await expect(repo.readProducts()).rejects.toThrow();
   });
 
+  it('reports a friendly error for content that is not valid base64 JSON', async () => {
+    const { repos, repo } = setup();
+    repos.getContent.mockResolvedValue({
+      data: { type: 'file', content: 'not base64 json', sha: 'sha-1' },
+    });
+
+    await expect(repo.readProducts()).rejects.toThrow('invalid response');
+  });
+
+  it('reports a friendly error when a file is too large to include content', async () => {
+    const { repos, repo } = setup();
+    repos.getContent.mockResolvedValue({ data: { type: 'file', sha: 'sha-1' } });
+
+    await expect(repo.readProducts()).rejects.toThrow('file too large');
+  });
+
   it('reads a price file, or undefined when there is none yet', async () => {
     const { repos, repo } = setup();
     const priceFile = { productId: 'a', history: [], lastCheckedAt: '2026-10-01T00:00:00Z' };
