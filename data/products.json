@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "currency": "ZAR",
+  "products": [
+    {
+      "id": "h-48LL_DqCF6cGbQLFMYu",
+      "url": "https://www.freedomofmovement.co.za/collections/shop-all-bags/products/rio-black",
+      "shop": "freedomofmovement.co.za",
+      "forWhom": "Mamma",
+      "targetPrice": 2500,
+      "minDropPercent": 15,
+      "useBrowser": false,
+      "bought": false,
+      "addedAt": "2026-11-02T13:46:22.269Z"
+    }
+  ]
+}
