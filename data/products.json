@@ -6,12 +6,21 @@
       "id": "h-48LL_DqCF6cGbQLFMYu",
       "url": "https://www.freedomofmovement.co.za/collections/shop-all-bags/products/rio-black",
       "shop": "freedomofmovement.co.za",
-      "forWhom": "Mamma",
       "targetPrice": 3500,
       "minDropPercent": 15,
       "useBrowser": true,
       "bought": false,
       "addedAt": "2026-11-02T13:46:22.269Z"
+    },
+    {
+      "id": "akx6KFXmzWUDfMQ-mpxT6",
+      "url": "https://superbalist.com/home-and-living/connect/camera/instax-mini-film-1pk-10-sheets-colour/24391",
+      "shop": "superbalist.com",
+      "targetPrice": 100,
+      "minDropPercent": 20,
+      "useBrowser": false,
+      "bought": false,
+      "addedAt": "2026-11-10T19:29:04.654Z"
     }
   ]
 }
