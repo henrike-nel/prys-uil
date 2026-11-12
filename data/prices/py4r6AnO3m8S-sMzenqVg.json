@@ -1,9 +1,9 @@
 {
   "productId": "py4r6AnO3m8S-sMzenqVg",
   "history": [],
-  "lastCheckedAt": "2026-11-11T22:42:40.314Z",
+  "lastCheckedAt": "2026-11-12T07:13:04.207Z",
   "lastError": "HTTP 403",
-  "consecutiveFailures": 4,
+  "consecutiveFailures": 5,
   "cantReadAlerted": true,
   "issueNumber": 5
 }
