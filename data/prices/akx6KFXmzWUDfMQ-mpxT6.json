@@ -1,9 +1,9 @@
 {
   "productId": "akx6KFXmzWUDfMQ-mpxT6",
   "history": [],
-  "lastCheckedAt": "2026-11-13T19:48:35.874Z",
+  "lastCheckedAt": "2026-11-14T00:54:02.581Z",
   "lastError": "HTTP 403",
-  "consecutiveFailures": 10,
+  "consecutiveFailures": 11,
   "cantReadAlerted": true,
   "issueNumber": 4
 }
