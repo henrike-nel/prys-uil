@@ -7,9 +7,15 @@
       "at": "2026-11-02T13:46:46.034Z",
       "price": 3095,
       "inStock": true
+    },
+    {
+      "at": "2026-11-25T14:24:58.611Z",
+      "price": 2166.5,
+      "inStock": true
     }
   ],
-  "lastCheckedAt": "2026-11-25T00:45:58.545Z",
+  "lastCheckedAt": "2026-11-25T14:24:58.611Z",
   "consecutiveFailures": 0,
+  "lastAlertedPrice": 2166.5,
   "issueNumber": 2
 }
